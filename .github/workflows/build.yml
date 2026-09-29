@@ -10,60 +10,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup build environment
+      - name: Setup build env
         uses: immortalwrt/setup-buildenv@main
 
-      - name: Add feeds & update
-        run: |
-          cat >> feeds.conf.default <<'EOF'
-src-git passwall https://github.com/openwrt-passwall/openwrt-passwall.git
-src-git passwall_packages https://github.com/openwrt-passwall/packages.git
-src-git openclash https://github.com/vernesong/OpenClash.git
-EOF
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      - name: Generate config
-        run: |
-          cat > .config <<'EOF'
-CONFIG_TARGET_mediatek=y
-CONFIG_TARGET_mediatek_filogic=y
-CONFIG_TARGET_MULTI_PROFILE=y
-CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_netcore_n60-pro=y
-
-CONFIG_PACKAGE_luci=y
-CONFIG_PACKAGE_luci-light=y
-CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
-
-CONFIG_PACKAGE_luci-app-passwall=y
-CONFIG_PACKAGE_luci-i18n-passwall-zh-cn=y
-CONFIG_PACKAGE_xray-core=y
-CONFIG_PACKAGE_v2ray-core=y
-CONFIG_PACKAGE_shadowsocks-libev-client=y
-CONFIG_PACKAGE_trojan-plus=y
-CONFIG_PACKAGE_hysteria=y
-CONFIG_PACKAGE_chinadns-ng=y
-CONFIG_PACKAGE_dnsmasq-full=y
-# CONFIG_PACKAGE_dnsmasq is not set
-
-CONFIG_PACKAGE_kmod-tun=y
-CONFIG_PACKAGE_kmod-nft-tproxy=y
-CONFIG_PACKAGE_kmod-nft-socket=y
-
-CONFIG_PACKAGE_luci-app-zerotier=y
-CONFIG_PACKAGE_zerotier=y
-CONFIG_PACKAGE_luci-app-openclash=y
-
-CONFIG_PACKAGE_kmod-mt7986=y
-CONFIG_PACKAGE_wpad-mesh-openssl=y
-EOF
-          make defconfig
-
-      - name: Compile firmware
-        run: make -j$(nproc)
-
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: N60Pro-firmware
-          path: bin/targets/mediatek/filogic/*.itb
+      - name: Test echo
+        run: echo "test ok"
