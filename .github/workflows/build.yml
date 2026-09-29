@@ -1,17 +1,56 @@
 name: Build ImmortalWrt N60Pro
 on:
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout ImmortalWrt source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup build env
+      - name: Setup build environment
         uses: immortalwrt/setup-buildenv@main
 
-      - name: Test echo
-        run: echo "test ok"
+      - name: Update feeds & install packages
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Generate N60Pro .config (with passwall)
+        run: |
+          cat > .config <<EOF
+CONFIG_TARGET_ramips=y
+CONFIG_TARGET_ramips_mt7621=y
+CONFIG_TARGET_ramips_mt7621_DEVICE_netcore_n60pro=y
+
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-i18n-zh-cn=y
+CONFIG_PACKAGE_luci-app-passwall=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Hysteria=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_NaiveProxy=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_SingBox=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
+
+CONFIG_PACKAGE_wpad-openssl=y
+CONFIG_PACKAGE_ddns-scripts=y
+CONFIG_PACKAGE_luci-app-ddns=y
+CONFIG_PACKAGE_curl=y
+CONFIG_PACKAGE_wget=y
+CONFIG_PACKAGE_tcpdump=y
+EOF
+          make defconfig
+
+      - name: Download & compile firmware
+        run: |
+          make -j$(nproc) download
+          make -j$(nproc)
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: N60Pro-ImmortalWrt-Firmware
+          path: bin/targets/ramips/mt7621/*.bin
